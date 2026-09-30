@@ -3,6 +3,15 @@ let favorites = [];
 const form = document.getElementById('add-favorite-form');
 const favoritesList = document.getElementById('favorites-list');
 
+const searchInput = document.getElementById('search-input');
+const categoryFilter = document.getElementById('category-filter');
+
+const searchText = searchInput.value.toLowerCase().trim();
+const selectedCategory = categoryFilter.value;
+
+searchInput.addEventListener('input', searchFavorites);
+categoryFilter.addEventListener('change', searchFavorites);
+
 let myFavorite = {
     name: 'Kentucky',
     category: 'state',
@@ -45,10 +54,9 @@ function addFavorite(event) {
 form.addEventListener('submit', addFavorite);
 
 function displayFavorites() {
-    favoritesList.innerHTML = '';
-    if (favorites.length === 0) {
-        favoritesList.innerHTML = '<p class="empty-message">No favorites yet. Add your first favorite place above!</p>';
-        return;
+    searchInput.value = '';
+    categoryFilter.value = 'all';
+    searchFavorites()
     }
     favorites.forEach(function(favorite) {
         const stars = '⭐'.repeat(favorite.rating);
@@ -61,7 +69,55 @@ function displayFavorites() {
                 <p class="favorite-date">Added: ${favorite.dateAdded}</p>
             </div>`;
     });
+
+
+function deleteFavorite(index) {
+    const favorite = favorites[index];
+    if (confirm(`Delete "${favorite.name}"?`)) {
+        favorites.splice(index, 1);   // remove 1 item at index
+        searchFavorites();            // re-render, keeping current filter
+    }
 }
 
+function searchFavorites() {
+    const searchText = searchInput.value.toLowerCase().trim();
+    const selectedCategory = categoryFilter.value;
+
+    const filtered = favorites.filter(function(favorite) {
+    const matchesSearch = searchText === '' ||
+        favorite.name.toLowerCase().includes(searchText) ||
+        favorite.notes.toLowerCase().includes(searchText);
+    const matchesCategory = selectedCategory === 'all' ||
+        favorite.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+});
+
+favoritesList.innerHTML = '';
+
+if (favorites.length === 0) {
+        favoritesList.innerHTML = '<p class="empty-message">No favorites yet. Add your first favorite place above!</p>';
+        return;
+    }
+    if (filtered.length === 0) {
+        favoritesList.innerHTML = '<p class="empty-message">No favorites match your search.</p>';
+        return;
+    }
+
+filtered.forEach(function(favorite) {
+    const index = favorites.indexOf(favorite);
+    const stars = '⭐'.repeat(favorite.rating);
+    
+    favoritesList.innerHTML += `
+        <div class="favorite-card">
+            <h3>${favorite.name}</h3>
+                <span class="favorite-category">${favorite.category}</span>
+                <div class="favorite-rating">${stars} (${favorite.rating}/5)</div>
+                <p class="favorite-notes">${favorite.notes}</p>
+                <p class="favorite-date">Added: ${favorite.dateAdded}</p>
+            <button class="btn-danger" onclick="deleteFavorite(${index})">Delete</button>
+        </div>`;
+});
+
+}
 
 displayFavorites();
