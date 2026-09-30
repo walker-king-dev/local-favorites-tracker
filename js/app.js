@@ -47,11 +47,34 @@ function addFavorite(event) {
     };
 
     favorites.push(newFavorite);
+    saveFavorites();
+    
     form.reset();
     displayFavorites();
 }
 
 form.addEventListener('submit', addFavorite);
+
+function saveFavorites() {
+    try {
+        localStorage.setItem('localFavorites', JSON.stringify(favorites));
+    } catch (error) {
+        alert('Unable to save favorites. Storage may be disabled.');
+    }
+}
+
+function loadFavorites() {
+    try {
+        const saved = localStorage.getItem('localFavorites');
+        if (saved) {
+            favorites = JSON.parse(saved);
+        } else {
+            favorites = [];
+        }
+    } catch (error) {
+        favorites = [];
+    }
+}
 
 function displayFavorites() {
     searchInput.value = '';
@@ -74,7 +97,8 @@ function displayFavorites() {
 function deleteFavorite(index) {
     const favorite = favorites[index];
     if (confirm(`Delete "${favorite.name}"?`)) {
-        favorites.splice(index, 1);   // remove 1 item at index
+        favorites.splice(index, 1);
+        saveFavorites();
         searchFavorites();            // re-render, keeping current filter
     }
 }
@@ -120,4 +144,5 @@ filtered.forEach(function(favorite) {
 
 }
 
+loadFavorites();
 displayFavorites();
